@@ -1,0 +1,3 @@
+2026-02-20 22:12:40,342 (20172/MainThread) newrelic.core.agent INFO - New Relic Python Agent (9.9.0)
+2026-02-20 22:12:52,286 (20172/NR-Activate-Session/GoComet-RideHailing) newrelic.core.agent_protocol INFO - Reporting to: https://rpm.newrelic.com/accounts/7736896/applications/552603446
+2026-02-20 22:19:45,580 (20172/MainThread) newrelic.core.agent INFO - New Relic Python Agent Shutdown

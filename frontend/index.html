@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GoComet Rides</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f13;
+      color: #e8e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid #2a2a4a;
+    }
+
+    header .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #6c63ff, #ff6584);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header .subtitle { font-size: 0.85rem; color: #888; }
+
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid #2a2a4a;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #a0a0c8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card h2 .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #6c63ff;
+    }
+
+    label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 0.3rem; margin-top: 0.8rem; }
+
+    input, select {
+      width: 100%;
+      background: #0f0f1a;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      color: #e8e8f0;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus { border-color: #6c63ff; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+    button {
+      margin-top: 1.2rem;
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+      color: white;
+    }
+
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+    }
+
+    .status-banner {
+      grid-column: 1 / -1;
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid #2a2a4a;
+      background: #1a1a2e;
+      display: none;
+    }
+
+    .status-banner.active { display: block; }
+
+    .status-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .status-badge {
+      padding: 0.3rem 0.9rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-requested, .badge-searching { background: #3730a3; color: #a5b4fc; }
+    .badge-matched, .badge-accepted    { background: #065f46; color: #6ee7b7; }
+    .badge-in_progress                 { background: #1e3a5f; color: #60a5fa; }
+    .badge-paused                      { background: #78350f; color: #fcd34d; }
+    .badge-completed                   { background: #14532d; color: #4ade80; }
+    .badge-cancelled                   { background: #450a0a; color: #f87171; }
+
+    .progress-bar-wrap {
+      background: #0f0f1a;
+      border-radius: 8px;
+      height: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #6c63ff, #ff6584);
+      transition: width 0.5s ease;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .info-item { }
+    .info-label { font-size: 0.72rem; color: #666; margin-bottom: 0.2rem; }
+    .info-value { font-size: 0.95rem; font-weight: 600; color: #e8e8f0; }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #6ee7b7;
+      animation: pulse 1.5s infinite;
+      margin-right: 6px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    .log {
+      grid-column: 1 / -1;
+      background: #0f0f1a;
+      border: 1px solid #2a2a4a;
+      border-radius: 12px;
+      padding: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.78rem;
+      color: #6b7280;
+    }
+
+    .log-entry { padding: 0.2rem 0; border-bottom: 1px solid #1a1a2e; }
+    .log-entry .time { color: #4a4a6a; margin-right: 0.5rem; }
+    .log-entry.success .msg { color: #4ade80; }
+    .log-entry.info .msg { color: #60a5fa; }
+    .log-entry.warn .msg { color: #fcd34d; }
+    .log-entry.error .msg { color: #f87171; }
+
+    .quick-demo {
+      grid-column: 1 / -1;
+      background: #1a1a2e;
+      border: 1px dashed #3a3a5a;
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .quick-demo span { font-size: 0.85rem; color: #888; }
+
+    .btn-sm {
+      padding: 0.4rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #2a2a4a;
+      color: #a0a0c8;
+      transition: all 0.2s;
+    }
+
+    .btn-sm:hover { background: #3a3a6a; color: #e8e8f0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">🚗 GoComet Rides</div>
+    <div class="subtitle">Real-time ride hailing platform</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Quick Demo -->
+  <div class="quick-demo">
+    <span>⚡ Quick demo: seed test data and auto-fill the form</span>
+    <button class="btn-sm" onclick="seedAndFill()">Auto-fill Demo</button>
+  </div>
+
+  <!-- Book a Ride -->
+  <div class="card">
+    <h2><span class="dot"></span>Book a Ride</h2>
+
+    <label>Rider ID</label>
+    <input id="riderId" placeholder="UUID from POST /v1/riders"/>
+
+    <div class="row">
+      <div>
+        <label>Pickup Lat</label>
+        <input id="pickupLat" type="number" step="0.0001" value="12.9716"/>
+      </div>
+      <div>
+        <label>Pickup Lng</label>
+        <input id="pickupLng" type="number" step="0.0001" value="77.5946"/>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Dest Lat</label>
+        <input id="destLat" type="number" step="0.0001" value="12.9352"/>
+      </div>
+      <div>
+        <label>Dest Lng</label>
+        <input id="destLng" type="number" step="0.0001" value="77.6245"/>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Tier</label>
+        <select id="tier">
+          <option>standard</option>
+          <option>premium</option>
+          <option>xl</option>
+        </select>
+      </div>
+      <div>
+        <label>Payment</label>
+        <select id="payment">
+          <option>card</option>
+          <option>cash</option>
+          <option>wallet</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="bookBtn" onclick="bookRide()">Book Ride</button>
+  </div>
+
+  <!-- Driver Panel -->
+  <div class="card">
+    <h2><span class="dot"></span>Driver Simulator</h2>
+
+    <label>Driver ID</label>
+    <input id="driverId" placeholder="UUID from POST /v1/drivers"/>
+
+    <div class="row">
+      <div>
+        <label>Latitude</label>
+        <input id="driverLat" type="number" step="0.0001" value="12.9720"/>
+      </div>
+      <div>
+        <label>Longitude</label>
+        <input id="driverLng" type="number" step="0.0001" value="77.5950"/>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="goOnline()">Go Online</button>
+    <button class="btn-primary" style="margin-top:0.5rem;background:linear-gradient(135deg,#0ea5e9,#0284c7)" onclick="sendLocation()">Send Location Update</button>
+    <button class="btn-primary" id="acceptBtn" style="margin-top:0.5rem;background:linear-gradient(135deg,#10b981,#059669);display:none" onclick="acceptRide()">Accept Ride</button>
+  </div>
+
+  <!-- Live Status -->
+  <div class="status-banner" id="statusBanner">
+    <div class="status-header">
+      <div>
+        <span class="pulse-dot" id="pulseIndicator"></span>
+        <span style="font-weight:700;font-size:1.1rem" id="rideIdLabel">Ride —</span>
+      </div>
+      <span class="status-badge" id="statusBadge">—</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Surge</div>
+        <div class="info-value" id="infoSurge">—</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Est. Fare</div>
+        <div class="info-value" id="infoFare">—</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Driver</div>
+        <div class="info-value" id="infoDriver">Searching...</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Final Fare</div>
+        <div class="info-value" id="infoFinal">—</div>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem;display:flex;gap:0.75rem;flex-wrap:wrap">
+      <button class="btn-primary" id="startTripBtn" style="width:auto;padding:0.5rem 1.2rem;font-size:0.85rem;display:none" onclick="startTrip()">▶ Start Trip</button>
+      <button class="btn-primary" id="endTripBtn" style="width:auto;padding:0.5rem 1.2rem;font-size:0.85rem;background:linear-gradient(135deg,#f59e0b,#d97706);display:none" onclick="endTrip()">⏹ End Trip</button>
+      <button class="btn-primary" id="payBtn" style="width:auto;padding:0.5rem 1.2rem;font-size:0.85rem;background:linear-gradient(135deg,#10b981,#059669);display:none" onclick="triggerPayment()">💳 Pay Now</button>
+    </div>
+  </div>
+
+  <!-- Activity Log -->
+  <div class="log" id="log">
+    <div class="log-entry info"><span class="time">--:--:--</span><span class="msg">GoComet Ride Hailing ready. Book a ride to begin.</span></div>
+  </div>
+
+</div>
+
+<script>
+  const API = '';  // same origin
+  let currentRideId = null;
+  let currentTripId = null;
+  let pollInterval = null;
+
+  const PROGRESS = {
+    requested: 10, searching: 25, matched: 40,
+    accepted: 55, in_progress: 75, paused: 65,
+    completed: 100, cancelled: 0
+  };
+
+  function log(msg, type = 'info') {
+    const el = document.getElementById('log');
+    const t = new Date().toLocaleTimeString();
+    el.innerHTML = `<div class="log-entry ${type}"><span class="time">${t}</span><span class="msg">${msg}</span></div>` + el.innerHTML;
+  }
+
+  async function api(method, path, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+    return data;
+  }
+
+  async function seedAndFill() {
+    log('Seeding demo data...', 'info');
+    try {
+      const rider = await api('POST', '/v1/riders', { name: 'Demo Rider', phone: '9' + Date.now().toString().slice(-9) });
+      const driver = await api('POST', '/v1/drivers', { name: 'Demo Driver', phone: '8' + Date.now().toString().slice(-9), tier: 'standard' });
+
+      document.getElementById('riderId').value = rider.id;
+      document.getElementById('driverId').value = driver.id;
+
+      log(`✅ Rider created: ${rider.id.slice(0,8)}...`, 'success');
+      log(`✅ Driver created: ${driver.id.slice(0,8)}...`, 'success');
+      log('Form auto-filled! Now click "Go Online" then "Book Ride"', 'info');
+    } catch(e) { log('Seed error: ' + e.message, 'error'); }
+  }
+
+  async function goOnline() {
+    const id = document.getElementById('driverId').value.trim();
+    if (!id) return log('Enter driver ID first', 'warn');
+    try {
+      await api('PATCH', `/v1/drivers/${id}/status`, { status: 'available' });
+      await sendLocation();
+      log(`Driver ${id.slice(0,8)}... is now ONLINE`, 'success');
+    } catch(e) { log('Error: ' + e.message, 'error'); }
+  }
+
+  async function sendLocation() {
+    const id = document.getElementById('driverId').value.trim();
+    const lat = parseFloat(document.getElementById('driverLat').value);
+    const lng = parseFloat(document.getElementById('driverLng').value);
+    if (!id) return;
+    try {
+      await api('POST', `/v1/drivers/${id}/location`, { latitude: lat, longitude: lng });
+      log(`📍 Location sent: (${lat}, ${lng})`, 'info');
+    } catch(e) { log('Location error: ' + e.message, 'error'); }
+  }
+
+  async function bookRide() {
+    const btn = document.getElementById('bookBtn');
+    btn.disabled = true;
+    btn.textContent = 'Booking...';
+
+    try {
+      const ride = await api('POST', '/v1/rides', {
+        rider_id: document.getElementById('riderId').value.trim(),
+        pickup_lat: parseFloat(document.getElementById('pickupLat').value),
+        pickup_lng: parseFloat(document.getElementById('pickupLng').value),
+        dest_lat: parseFloat(document.getElementById('destLat').value),
+        dest_lng: parseFloat(document.getElementById('destLng').value),
+        tier: document.getElementById('tier').value,
+        payment_method: document.getElementById('payment').value,
+        idempotency_key: 'ride-' + Date.now()
+      });
+
+      currentRideId = ride.id;
+      log(`🚗 Ride booked: ${ride.id.slice(0,8)}... | Surge: ${ride.surge_multiplier}x | Est. Fare: ₹${ride.estimated_fare}`, 'success');
+      document.getElementById('statusBanner').classList.add('active');
+      startPolling();
+    } catch(e) {
+      log('Booking error: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Book Ride';
+    }
+  }
+
+  function startPolling() {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(pollRide, 2000);
+    pollRide();
+  }
+
+  async function pollRide() {
+    if (!currentRideId) return;
+    try {
+      const ride = await api('GET', `/v1/rides/${currentRideId}`);
+      updateStatusUI(ride);
+
+      if (ride.status === 'completed' || ride.status === 'cancelled') {
+        clearInterval(pollInterval);
+        document.getElementById('pulseIndicator').style.animation = 'none';
+      }
+    } catch(e) { log('Poll error: ' + e.message, 'error'); }
+  }
+
+  function updateStatusUI(ride) {
+    const badge = document.getElementById('statusBadge');
+    badge.textContent = ride.status.replace('_', ' ').toUpperCase();
+    badge.className = 'status-badge badge-' + ride.status;
+
+    document.getElementById('rideIdLabel').textContent = 'Ride ' + ride.id.slice(0, 8) + '...';
+    document.getElementById('progressBar').style.width = (PROGRESS[ride.status] || 0) + '%';
+    document.getElementById('infoSurge').textContent = ride.surge_multiplier + 'x';
+    document.getElementById('infoFare').textContent = ride.estimated_fare ? '₹' + parseFloat(ride.estimated_fare).toFixed(0) : '—';
+    document.getElementById('infoFinal').textContent = ride.final_fare ? '₹' + parseFloat(ride.final_fare).toFixed(0) : '—';
+
+    if (ride.driver_name) {
+      document.getElementById('infoDriver').textContent = ride.driver_name;
+    }
+
+    // Show/hide action buttons
+    document.getElementById('acceptBtn').style.display = ride.status === 'matched' ? 'block' : 'none';
+    document.getElementById('startTripBtn').style.display = ride.status === 'accepted' ? 'block' : 'none';
+    document.getElementById('endTripBtn').style.display = ride.status === 'in_progress' ? 'block' : 'none';
+    document.getElementById('payBtn').style.display = ride.status === 'completed' ? 'block' : 'none';
+  }
+
+  async function acceptRide() {
+    const driverId = document.getElementById('driverId').value.trim();
+    if (!driverId || !currentRideId) return log('Need driver ID and active ride', 'warn');
+    try {
+      const res = await api('POST', `/v1/drivers/${driverId}/accept`, { ride_id: currentRideId });
+      currentTripId = res.trip_id;
+      log(`✅ Ride accepted by driver | Trip: ${res.trip_id.slice(0,8)}...`, 'success');
+    } catch(e) { log('Accept error: ' + e.message, 'error'); }
+  }
+
+  async function startTrip() {
+    if (!currentTripId) return log('No trip ID', 'warn');
+    try {
+      await api('POST', `/v1/trips/${currentTripId}/start`);
+      log('▶ Trip started!', 'success');
+    } catch(e) { log('Error: ' + e.message, 'error'); }
+  }
+
+  async function endTrip() {
+    if (!currentTripId) return log('No trip ID', 'warn');
+    try {
+      const res = await api('POST', `/v1/trips/${currentTripId}/end`, {
+        distance_km: 5.2,
+        duration_minutes: 18
+      });
+      log(`⏹ Trip ended | Fare: ₹${res.fare} | Dist: ${res.distance_km}km`, 'success');
+    } catch(e) { log('Error: ' + e.message, 'error'); }
+  }
+
+  async function triggerPayment() {
+    if (!currentRideId) return;
+    try {
+      const res = await api('POST', '/v1/payments', {
+        ride_id: currentRideId,
+        idempotency_key: 'pay-' + currentRideId
+      });
+      log(`💳 Payment triggered: ₹${res.amount} via ${res.method} — ${res.status}`, 'success');
+      document.getElementById('payBtn').style.display = 'none';
+    } catch(e) { log('Payment error: ' + e.message, 'error'); }
+  }
+
+  // Auto-send location every 2s if driver ID is set
+  setInterval(() => {
+    const id = document.getElementById('driverId').value.trim();
+    if (id) sendLocation();
+  }, 2000);
+</script>
+
+</body>
+</html>
